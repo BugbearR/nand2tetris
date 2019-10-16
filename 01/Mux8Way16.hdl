@@ -18,5 +18,9 @@ CHIP Mux8Way16 {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+    // 以下、数学的には正しいが、部品点数的には効率が悪い。
+    // (sel の Not の共通化ができていない)
+    Mux4Way16(a=a, b=b, c=c, d=d, sel=sel[0..1], out=mabcd);
+    Mux4Way16(a=e, b=f, c=g, d=h, sel=sel[0..1], out=mefgh);
+    Mux16(a=mabcd, b=mefgh, sel=sel[2], out=out);
 }
