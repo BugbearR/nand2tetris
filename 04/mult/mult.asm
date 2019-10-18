@@ -7,3 +7,38 @@
 // (R0, R1, R2 refer to RAM[0], RAM[1], and RAM[2], respectively.)
 
 // Put your code here.
+	// simple answer.
+	//
+	// R2 = 0
+	// for (i = R0; i > 0; i--) {
+	//     R2 += R1;
+	// }
+
+	@R2
+	M=0
+
+	@R0
+	D=M
+	@i
+	M=D
+
+(LOOP)
+	@i
+	D=M
+	@END
+	D;JLE
+
+	@R1
+	D=M
+	@R2
+	M=D+M
+
+	@i
+	M=M-1
+
+	@LOOP
+	0;JMP
+
+(END)
+	@END
+	0;JMP
