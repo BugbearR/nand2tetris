@@ -39,5 +39,57 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    // Put your code here:
+    // instruction[15] 0:A, 1:C
+    // instruction[6..12] see Fig.2-4, Fig.4-3
+    // instruction[12] 0:A, 1:M
+    // instruction[11] zx
+    // instruction[10] nx
+    // instruction[9] zy
+    // instruction[8] ny
+    // instruction[7] f
+    // instruction[6] no
+    // instruction[3..5] dest
+    // instruction[5] dest A
+    // instruction[4] dest D
+    // instruction[3] dest M
+    // instruction[0..2] jump
+    // instruction[2] out < 0 ng
+    // instruction[1] out = 0 zr
+    // instruction[0] out > 0 (~ng && ~zr)
+
+    // instruction[15] == 0 || (instruction[15] == 1 && instruction[5] == 1)
+    Not(in=instruction[15], out=addr);
+    And(a=instruction[15], b=instruction[5], out=destA);
+    And(a=instruction[15], b=instruction[4], out=destD);
+    And(a=instruction[15], b=instruction[3], out=writeM);
+
+    Or(a=addr, b=destA, out=loadA);
+
+    Mux16(a=instruction, b=aluOut, sel=instruction[15], out=muxAOut);
+
+    ARegister(in=muxAOut, load=loadA, out=aRegOut, out[0..14]=addressM);
+
+    Not(in=jmp, out=notJmp);
+    // load by only inst jmp
+    And(a=instruction[15], b=jmp, out=loadPc);
+    // inc at addr or not jmp
+    Or(a=addr, b=notJmp, out=incPc);
+    PC(in=aRegOut, load=loadPc, inc=incPc, reset=reset, out[0..14]=pc);
+
+    DRegister(in=aluOut, load=destD, out=dRegOut);
+
+    Mux16(a=aRegOut, b=inM, sel=instruction[12], out=muxAMOut);
+
+    ALU(x=dRegOut, y=muxAMOut, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=outM, out=aluOut, zr=zr, ng=ng);
+
+    Not(in=ng, out=notNg);
+    Not(in=zr, out=notZr);
+    And(a=notNg, b=notZr, out=pl);
+
+    And(a=instruction[2], b=ng, out=jlt);
+    And(a=instruction[1], b=zr, out=jeq);
+    And(a=instruction[0], b=pl, out=jgt);
+
+    Or(a=jlt, b=jeq, out=jle);
+    Or(a=jle, b=jgt, out=jmp);
 }
